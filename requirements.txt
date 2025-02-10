@@ -11,3 +11,5 @@ langchain_huggingface
 chromadb
 pinecone.grpc
 streamlit
+pinecone-client
+Pinecone
