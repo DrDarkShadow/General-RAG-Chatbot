@@ -52,11 +52,11 @@ if uploaded_file is not None:
     st.info("Setting up Pinecone for document retrieval...")
     # Set up Pinecone with a local directory for persistence
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-    docsearch = PineconeVectorStore.from_existing_index(
-        documents=text_chunks,
-        index_name='musicbot',
-        embedding=word_embeddings,
-    )
+    docsearch = PineconeVectorStore.from_documents(
+            documents=text_chunks,
+            index_name='musicbot',
+            embedding=word_embeddings,
+        )
     db = docsearch
     
     st.info("Integrating with Azure OpenAI...")
