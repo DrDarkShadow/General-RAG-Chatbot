@@ -5,8 +5,6 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import AzureChatOpenAI
 from langchain.chains import create_retrieval_chain
-from pinecone import Pinecone, ServerlessSpec
-from langchain_pinecone import PineconeEmbeddings, PineconeVectorStore
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from pinecone import Pinecone, ServerlessSpec
 from langchain.schema import Document
@@ -131,16 +129,11 @@ if uploaded_file is not None and not st.session_state.processed:
 
             # Create efficient chain
             llm = load_llm()
-            prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", "You are an assistant for question-answering tasks. "
-                    "Use the following pieces of retrieved context to answer the question."
-                    " Provide a concise and relevant answer. You are strictly restricted to give answer that present in this pdf uploaded for other question tell i dont know."
-                    "\n\n{context}"
-                    ),
-                ("human", "{input}"),
-            ]
-            )
+            prompt = ChatPromptTemplate.from_template("""
+            Answer using only this context:
+            {context}
+            Question: {input}
+            """)
             
             st.session_state.retrieval_chain = create_retrieval_chain(
                 retriever,
