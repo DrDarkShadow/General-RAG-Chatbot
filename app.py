@@ -5,8 +5,6 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import AzureChatOpenAI
 from langchain.chains import create_retrieval_chain
-from pinecone import Pinecone, ServerlessSpec
-from langchain_pinecone import PineconeEmbeddings, PineconeVectorStore
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from pinecone import Pinecone, ServerlessSpec
 from langchain.schema import Document
