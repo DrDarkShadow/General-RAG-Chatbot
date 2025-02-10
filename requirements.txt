@@ -8,6 +8,5 @@ langchain_openai
 pypdf
 sentence_transformers
 langchain_huggingface
-os
 chromadb
 streamlit
