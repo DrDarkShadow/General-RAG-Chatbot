@@ -64,7 +64,6 @@ if uploaded_file is not None:
             )
         )
     docsearch = PineconeVectorStore.from_existing_index(
-        documents=text_chunks,
         index_name='musicbot',
         embedding=word_embeddings,
         )
