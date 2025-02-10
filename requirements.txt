@@ -10,4 +10,5 @@ sentence_transformers
 langchain_huggingface
 chromadb
 streamlit
-pinecone
+pinecone-client
+Pinecone
