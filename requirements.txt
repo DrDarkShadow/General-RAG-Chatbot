@@ -10,4 +10,4 @@ sentence_transformers
 langchain_huggingface
 streamlit==1.18.1
 chromadb==0.4.0
-sqlite3==3.35.0
+pysqlite3==0.4.6  # Updated SQLite version
