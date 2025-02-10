@@ -1,0 +1,13 @@
+langchain
+python-dotenv
+langchain-pinecone
+langchain_chroma
+langchain_community
+azure-identity
+langchain_openai
+pypdf
+sentence_transformers
+langchain_huggingface
+os
+chromadb
+streamlit
