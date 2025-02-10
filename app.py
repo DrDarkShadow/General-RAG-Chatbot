@@ -135,7 +135,7 @@ if uploaded_file is not None and not st.session_state.processed:
             [
                 ("system", "You are an assistant for question-answering tasks. "
                     "Use the following pieces of retrieved context to answer the question."
-                    " Provide a concise and relevant answer. You are strictly restricted to give answer in the vicinity of the pdf or data uploaded dont answer other then the pdf."
+                    " Provide a concise and relevant answer. You are strictly restricted to give answer that present in this pdf uploaded for other question tell i dont know."
                     "\n\n{context}"
                     ),
                 ("human", "{input}"),
