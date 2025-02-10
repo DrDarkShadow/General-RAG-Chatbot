@@ -8,5 +8,6 @@ langchain_openai
 pypdf
 sentence_transformers
 langchain_huggingface
-chromadb
-streamlit
+streamlit==1.18.1
+chromadb==0.4.0
+sqlite3==3.35.0
