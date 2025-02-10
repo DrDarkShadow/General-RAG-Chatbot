@@ -2,7 +2,6 @@ import streamlit as st
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
 from langchain_openai import AzureChatOpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -48,8 +47,8 @@ if uploaded_file is not None:
     text_documents = [chunk.page_content for chunk in text_chunks]
     word_embeddings = embeddings.embed_documents(text_documents)
 
-    st.info("Setting up Chroma for document retrieval...")
-    # Set up Chroma with a local directory for persistence
+    st.info("Setting up Pinecone for document retrieval...")
+    # Set up Pinecone with a local directory for persistence
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
     index_name = "musicbot"
     
