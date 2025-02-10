@@ -131,11 +131,17 @@ if uploaded_file is not None and not st.session_state.processed:
 
             # Create efficient chain
             llm = load_llm()
-            prompt = ChatPromptTemplate.from_template("""
-            Answer using only this context:
-            {context}
-            Question: {input}
-            """)
+            prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", system_prompt = (
+                    "You are an assistant for question-answering tasks. "
+                    "Use the following pieces of retrieved context to answer the question."
+                    " Provide a concise and relevant answer. You are strictly restricted to give answer in the vicinity of the pdf or data uploaded dont answer other then the pdf."
+                    "\n\n{context}"
+                    )),
+                ("human", "{input}"),
+            ]
+            )
             
             st.session_state.retrieval_chain = create_retrieval_chain(
                 retriever,
