@@ -65,7 +65,7 @@ def wait_for_index_ready(pc):
                 raise TimeoutError("Index creation timed out")
             time.sleep(5)
 
-st.title("General RAG Chatbot")
+st.markdown("<h1 style='text-align: center;'>General RAG Chatbot</h1>", unsafe_allow_html=True)
 
 # Session state management
 if 'processed' not in st.session_state:
