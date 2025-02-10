@@ -52,17 +52,6 @@ if uploaded_file is not None:
     st.info("Setting up Pinecone for document retrieval...")
     # Set up Pinecone with a local directory for persistence
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-    index_name = "musicbot"
-    if index_name not in pc.list_indexes():
-        pc.create_index(
-            name=index_name,
-            dimension=384,
-            metric="cosine",
-            spec=ServerlessSpec(
-                cloud='aws',
-                region='us-east-1'
-            )
-        )
     docsearch = PineconeVectorStore.from_existing_index(
         documents=text_chunks,
         index_name='musicbot',
