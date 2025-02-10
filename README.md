@@ -1,13 +1,13 @@
 # General RAG Chatbot
 The General RAG Chatbot is a Retrieval-Augmented Generation (RAG)-based chatbot that allows users to upload PDF documents and ask queries about their content. It utilizes LangChain for document processing, Hugging Face embeddings for text representation, ChromaDB for storage and retrieval, and Azure OpenAI GPT-4 for answering user queries.
 
-Features :
-✅ Upload PDFs – Users can upload a PDF to extract text for querying.
-✅ Text Chunking – The document is split into smaller, meaningful text chunks.
-✅ Embeddings Generation – Converts text into vector embeddings using Hugging Face’s all-MiniLM-L6-v2 model.
-✅ Efficient Retrieval – Uses ChromaDB for storing and retrieving relevant text sections.
-✅ AI-Powered Responses – Retrieves the best-matching content and provides answers using Azure OpenAI GPT-4.
-✅ User-Friendly Interface – Built using Streamlit for easy interaction.
+### Features  
+- ✅ Upload PDFs – Users can upload a PDF to extract text for querying.  
+- ✅ Text Chunking – The document is split into smaller, meaningful text chunks.  
+- ✅ Embeddings Generation – Converts text into vector embeddings using Hugging Face’s all-MiniLM-L6-v2 model.  
+- ✅ Efficient Retrieval – Uses ChromaDB for storing and retrieving relevant text sections.  
+- ✅ AI-Powered Responses – Retrieves the best-matching content and provides answers using Azure OpenAI GPT-4.  
+- ✅ User-Friendly Interface – Built using Streamlit for easy interaction.  
 
 # How It Works
 1. Upload a PDF: The system reads and processes the document.
