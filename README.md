@@ -1,3 +1,14 @@
+# BotPDF - RAG Chatbot
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://botpdf.streamlit.app/)
+
+🔗 Live Demo: [https://botpdf.streamlit.app/](https://botpdf.streamlit.app/)
+
+## Features
+- PDF-based question answering
+- Context-aware responses
+- Source citation
+
 # General RAG Chatbot
 The General RAG Chatbot is a Retrieval-Augmented Generation (RAG)-based chatbot that allows users to upload PDF documents and ask queries about their content. It utilizes LangChain for document processing, Hugging Face embeddings for text representation, ChromaDB for storage and retrieval, and Azure OpenAI GPT-4 for answering user queries.
 
