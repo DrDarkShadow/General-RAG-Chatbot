@@ -133,12 +133,11 @@ if uploaded_file is not None and not st.session_state.processed:
             llm = load_llm()
             prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", system_prompt = (
-                    "You are an assistant for question-answering tasks. "
+                ("system", "You are an assistant for question-answering tasks. "
                     "Use the following pieces of retrieved context to answer the question."
                     " Provide a concise and relevant answer. You are strictly restricted to give answer in the vicinity of the pdf or data uploaded dont answer other then the pdf."
                     "\n\n{context}"
-                    )),
+                    ),
                 ("human", "{input}"),
             ]
             )
