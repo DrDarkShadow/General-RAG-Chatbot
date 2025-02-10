@@ -4,6 +4,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import AzureChatOpenAI
 from langchain.chains import create_retrieval_chain
+from pinecone import Pinecone, ServerlessSpec
+from langchain_pinecone import PineconeEmbeddings, PineconeVectorStore
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain import hub
 import os
@@ -49,6 +51,18 @@ if uploaded_file is not None:
 
     st.info("Setting up Pinecone for document retrieval...")
     # Set up Pinecone with a local directory for persistence
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+        index_name = "musicbot"
+        if index_name not in pc.list_indexes():
+            pc.create_index(
+                name=index_name,
+                dimension=384,
+                metric="cosine",
+                spec=ServerlessSpec(
+                    cloud='aws',
+                    region='us-east-1'
+                )
+            )
     docsearch = PineconeVectorStore.from_existing_index(
         documents=text_chunks,
         index_name='musicbot',
