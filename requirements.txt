@@ -9,4 +9,5 @@ pypdf
 sentence_transformers
 langchain_huggingface
 chromadb
+pinecone.grpc
 streamlit

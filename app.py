@@ -2,97 +2,180 @@ import streamlit as st
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_chroma import Chroma
+from langchain_pinecone import PineconeVectorStore
 from langchain_openai import AzureChatOpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain import hub
+from pinecone import Pinecone, ServerlessSpec
+from langchain.schema import Document
 import os
+from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import tempfile
+import time
+import uuid
 
 # Load environment variables
 load_dotenv(override=True)
 
-# Streamlit app
+index_name = "musicbot"
+namespace = str(uuid.uuid4())  # Unique namespace for each session
+
+@st.cache_resource
+def load_embeddings():
+    return HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={'device': 'cpu'},  # CPU optimization for cloud
+        encode_kwargs={'normalize_embeddings': True}
+    )
+
+@st.cache_data
+def process_pdf(file_path):
+    loader = PyPDFLoader(file_path)
+    docs = loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=750,  # Increased chunk size
+        chunk_overlap=50,
+        separators=["\n\n", "\n", " ", ""]  # Better PDF processing
+    )
+    return text_splitter.split_documents(docs)
+
+@st.cache_resource
+def load_llm():
+    return AzureChatOpenAI(
+        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        azure_deployment="gpt-4o",
+        api_version="2023-09-01-preview",
+        temperature=0.6,
+        streaming=True  # Enable streaming for faster responses
+    )
+
+def wait_for_index_ready(pc):
+    """Poll index status until ready"""
+    start_time = time.time()
+    while True:
+        try:
+            desc = pc.describe_index(index_name)
+            if desc.status['ready']:
+                return True
+            st.info(f"🕒 Index status: {desc.status['state']}")
+            time.sleep(5)
+        except Exception as e:
+            if time.time() - start_time > 300:  # 5 minute timeout
+                raise TimeoutError("Index creation timed out")
+            time.sleep(5)
+
 st.title("General RAG Chatbot")
 
-# File uploader
+# Session state management
+if 'processed' not in st.session_state:
+    st.session_state.processed = False
+if 'retrieval_chain' not in st.session_state:
+    st.session_state.retrieval_chain = None
+
 uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
-if uploaded_file is not None:
-    st.info("Uploading and processing the PDF file...")
-    
-    # Save the uploaded file temporarily to disk
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-        temp_file.write(uploaded_file.getbuffer())
-        temp_file_path = temp_file.name
 
-    st.info("Loading the PDF file...")
-    # Create the loader using the temporary file path
-    loader = PyPDFLoader(temp_file_path)
-    docs = loader.load()
+if uploaded_file is not None and not st.session_state.processed:
+    with st.status("📤 Processing PDF...", expanded=True) as status:
+        try:
+            # Use temporary directory for better file handling
+            with tempfile.TemporaryDirectory() as temp_dir:
+                temp_file_path = os.path.join(temp_dir, "uploaded.pdf")
+                
+                # Write uploaded file to temporary directory
+                with open(temp_file_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                
+                # Process PDF from temp directory
+                text_documents = process_pdf(temp_file_path)
+                
+            st.info(f"📊 Extracted {len(text_documents)} text chunks")
 
-    st.info("Splitting the text into chunks...")
-    # Split the text
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=20
-    )
-    text_chunks = text_splitter.split_documents(docs)
+            # Pinecone setup with namespace
+            pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+            
+            # Check existing index
+            if index_name not in pc.list_indexes().names():
+                with st.spinner("🏗️ Creating index..."):
+                    pc.create_index(
+                        name=index_name,
+                        dimension=384,
+                        metric='cosine',
+                        spec=ServerlessSpec(cloud="aws", region="us-east-1")
+                    )
+                    wait_for_index_ready(pc)
+            
+            # Batch document processing
+            embeddings = load_embeddings()
+            with st.spinner("🚀 Storing vectors..."):
+                PineconeVectorStore.from_documents(
+                    documents=text_documents,
+                    embedding=embeddings,
+                    index_name=index_name,
+                    namespace=namespace,  # Use unique namespace
+                    batch_size=100,  # Optimized batch size
+                    pool_threads=4  # Parallel processing
+                )
 
-    st.info("Generating embeddings using Hugging Face model...")
-    # Use Hugging Face embeddings
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
-    # Generate embeddings
-    text_documents = [chunk.page_content for chunk in text_chunks]
-    word_embeddings = embeddings.embed_documents(text_documents)
-
-    st.info("Setting up Chroma for document retrieval...")
-    # Set up Chroma with a local directory for persistence
-    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-    index_name = "musicbot"
-    
-    # Check if the index already exists
-    if not pc.list_indexes().contains(index_name):
-        pc.create_index(
-            name=index_name,
-            dimension=384,
-            metric="cosine",
-            spec=ServerlessSpec(
-                cloud='aws',
-                region='us-east-1'
+            # Initialize retriever with namespace
+            db = PineconeVectorStore(
+                index_name=index_name,
+                embedding=embeddings,
+                namespace=namespace
             )
-        )
-    
-    docsearch = PineconeVectorStore.from_existing_index(
-        index_name=index_name,
-        embedding=embeddings,
-    )
-    db = docsearch
-    
-    st.info("Integrating with Azure OpenAI...")
-    # Integrate with LLM
-    retriever = db.as_retriever()
-    llm = AzureChatOpenAI(
-        api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
-        azure_deployment="gpt-4o",  # or your deployment
-        api_version="2023-09-01-preview",  # or your api version
-        temperature=0.6,
-    )
-    retrieval_qa_chat_prompt = hub.pull("langchain-ai/retrieval-qa-chat")
-    combine_docs_chain = create_stuff_documents_chain(
-        llm, retrieval_qa_chat_prompt
-    )
-    retrieval_chain = create_retrieval_chain(retriever, combine_docs_chain)
+            retriever = db.as_retriever(
+                search_kwargs={'k': 3}  # Optimized result count
+            )
 
-    st.success("PDF processing complete. You can now enter your query.")
-    # Query input
-    query = st.text_input("Enter your query:")
+            # Create efficient chain
+            llm = load_llm()
+            prompt = ChatPromptTemplate.from_template("""
+            Answer using only this context:
+            {context}
+            Question: {input}
+            """)
+            
+            st.session_state.retrieval_chain = create_retrieval_chain(
+                retriever,
+                create_stuff_documents_chain(llm, prompt)
+            )
+
+            st.session_state.processed = True
+            status.update(label="✅ Ready for queries!", state="complete")
+
+        except Exception as e:
+            st.error(f"🚨 Error: {str(e)}")
+            st.session_state.processed = False
+
+if st.session_state.processed:
+    query = st.chat_input("Ask about the document:")
     if query:
-        st.info("Processing your query...")
-        response = retrieval_chain.invoke({"input": query})
-        answer = response.get("answer", "I don't know the answer.")
-        st.write(answer)
-else:
-    st.write("Please upload a PDF file to proceed.")
+        try:
+            with st.status("🔍 Processing...", expanded=False):
+                response = st.session_state.retrieval_chain.invoke(
+                    {"input": query},
+                    config={"max_concurrency": 5}
+                )
+            
+            # Display answer outside the status block
+            st.chat_message("assistant").write(response["answer"])
+                
+            # Show context sources in a separate expander
+            with st.expander("📚 See sources"):
+                for i, doc in enumerate(response.get("context", [])):
+                    st.markdown(f"**Source {i+1}** (Page {doc.metadata.get('page', '?')})")
+                    st.text(doc.page_content[:300] + "...")
+                    st.divider()
+
+        except Exception as e:
+            st.error(f"❌ Query failed: {str(e)}")
+
+st.sidebar.markdown("""
+**How it works:**
+1. Upload a PDF document
+2. The system will:
+   - Extract text content
+   - Create a vector database
+   - Prepare the AI model
+3. Ask questions about the document
+                    """)
