@@ -66,8 +66,24 @@ streamlit run app.py
 - Enhanced retrieval for large documents
 - Additional model options for improved response quality
   
-# Contributing
-Contributions are welcome! Feel free to open an issue or submit a pull request.
+## 🤝 Contributing
+Feel free to contribute to this project by:
+- Adding new ML models
+- Improving data preprocessing
+- Enhancing performance evaluation
+
+Fork this repository, make your changes, and submit a pull request! 🎯
+
+---
+
+## 📩 Contact
+For any queries or suggestions, feel free to reach out!
+
+📧 **Email**: gaur.prateek.1609@gmail.com  
+
+---
+
+⭐ **If you find this project useful, don't forget to give it a star!** ⭐
 
 # License
 This project is licensed under the MIT License.
