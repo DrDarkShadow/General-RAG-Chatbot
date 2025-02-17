@@ -54,8 +54,12 @@ if 'processed' not in st.session_state:
     st.session_state.processed = False
 if 'retrieval_chain' not in st.session_state:
     st.session_state.retrieval_chain = None
-if 'chroma_dir' not in st.session_state:
-    st.session_state.chroma_dir = None
+if "chroma_dir" in st.session_state and st.session_state.chroma_dir:
+    try:
+        shutil.rmtree(st.session_state.chroma_dir, ignore_errors=True)
+    except Exception as e:
+        st.error(f"Error deleting directory: {e}")
+
 
 uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
