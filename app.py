@@ -36,12 +36,6 @@ def process_pdf(file_path):
         separators=["\n\n", "\n", " ", ""]
     )
     return text_splitter.split_documents(docs)
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=750,
-        chunk_overlap=50,
-        separators=["\n\n", "\n", " ", ""]
-    )
-    return text_splitter.split_documents(docs)
 
 @st.cache_resource
 def load_llm():
@@ -63,7 +57,7 @@ if 'retrieval_chain' not in st.session_state:
 if 'chroma_dir' not in st.session_state:
     st.session_state.chroma_dir = None
 
-uploaded_file = st.file_uploader("Choose any Pdf file", type="pdf")
+uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
 
 if uploaded_file is not None and not st.session_state.processed:
     with st.status("📤 Processing PDF...", expanded=True) as status:
@@ -83,7 +77,7 @@ if uploaded_file is not None and not st.session_state.processed:
             temp_file_path = os.path.join(temp_dir, "doc.pdf")
             with open(temp_file_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
-            
+
             text_documents = process_pdf(temp_file_path)
 
             # Store vectors
@@ -108,7 +102,7 @@ if uploaded_file is not None and not st.session_state.processed:
             {context}
             Question: {input}
             """)
-            
+
             st.session_state.retrieval_chain = create_retrieval_chain(
                 retriever,
                 create_stuff_documents_chain(llm, prompt)
@@ -127,9 +121,9 @@ if st.session_state.processed:
         try:
             with st.status("🔍 Processing...", expanded=False):
                 response = st.session_state.retrieval_chain.invoke({"input": query})
-            
+
             st.chat_message("assistant").write(response["answer"])
-            
+
             with st.expander("📚 See sources"):
                 for i, doc in enumerate(response.get("context", [])):
                     st.markdown(f"**Source {i+1}** (Page {doc.metadata.get('page', '?')})")
