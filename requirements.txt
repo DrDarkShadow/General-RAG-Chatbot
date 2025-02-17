@@ -9,3 +9,4 @@ streamlit>=1.36.0
 azure-identity>=1.15.0
 langchain-openai>=0.1.6
 langchain-community>=0.0.34
+langchain_huggingface
