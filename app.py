@@ -27,24 +27,15 @@ def load_embeddings():
     )
 
 @st.cache_data
-def process_file(file_path):
-    ext = os.path.splitext(file_path)[1].lower()
-    
-    if ext == ".pdf":
-        loader = PyPDFLoader(file_path)
-        docs = loader.load()
-    elif ext in [".xlsx", ".csv"]:
-        # Load file using pandas
-        if ext == ".csv":
-            df = pd.read_csv(file_path)
-        else:  # .xlsx
-            df = pd.read_excel(file_path)
-        # Convert the DataFrame to text. This example converts the whole DataFrame to CSV format text.
-        text = df.to_csv(index=False)
-        # Create a Document object from the text
-        docs = [Document(page_content=text)]
-    else:
-        raise ValueError(f"Unsupported file type: {ext}")
+def process_pdf(file_path):
+    loader = PyPDFLoader(file_path)
+    docs = loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=750,
+        chunk_overlap=50,
+        separators=["\n\n", "\n", " ", ""]
+    )
+    return text_splitter.split_documents(docs)
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=750,
         chunk_overlap=50,
@@ -72,7 +63,7 @@ if 'retrieval_chain' not in st.session_state:
 if 'chroma_dir' not in st.session_state:
     st.session_state.chroma_dir = None
 
-uploaded_file = st.process_file("Choose any file")
+uploaded_file = st.process_pdf("Choose any Pdf file", type="pdf")
 
 if uploaded_file is not None and not st.session_state.processed:
     with st.status("📤 Processing PDF...", expanded=True) as status:
