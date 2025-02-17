@@ -27,9 +27,24 @@ def load_embeddings():
     )
 
 @st.cache_data
-def process_pdf(file_path):
-    loader = PyPDFLoader(file_path)
-    docs = loader.load()
+def process_file(file_path):
+    ext = os.path.splitext(file_path)[1].lower()
+    
+    if ext == ".pdf":
+        loader = PyPDFLoader(file_path)
+        docs = loader.load()
+    elif ext in [".xlsx", ".csv"]:
+        # Load file using pandas
+        if ext == ".csv":
+            df = pd.read_csv(file_path)
+        else:  # .xlsx
+            df = pd.read_excel(file_path)
+        # Convert the DataFrame to text. This example converts the whole DataFrame to CSV format text.
+        text = df.to_csv(index=False)
+        # Create a Document object from the text
+        docs = [Document(page_content=text)]
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=750,
         chunk_overlap=50,
