@@ -63,7 +63,7 @@ if 'retrieval_chain' not in st.session_state:
 if 'chroma_dir' not in st.session_state:
     st.session_state.chroma_dir = None
 
-uploaded_file = st.process_pdf("Choose any Pdf file", type="pdf")
+uploaded_file = st.process_pdf("Choose any Pdf file", type=["pdf"])
 
 if uploaded_file is not None and not st.session_state.processed:
     with st.status("📤 Processing PDF...", expanded=True) as status:
