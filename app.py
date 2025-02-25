@@ -10,6 +10,7 @@ from langchain_openai import AzureChatOpenAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 import os
+import hashlib
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import tempfile
