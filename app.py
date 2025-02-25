@@ -58,37 +58,39 @@ if uploaded_file is not None:
     # Generate unique ID based on file content
     file_content = uploaded_file.getvalue()
     file_hash = get_file_hash(file_content)
-    
+
     # Create persistent storage path
     base_dir = os.path.join(tempfile.gettempdir(), "rag_chatbot")
-    chroma_dir = os.path.join(base_dir, file_hash, "chroma")
+    if "chroma_dir" not in st.session_state:
+        st.session_state.chroma_dir = os.path.join(base_dir, file_hash, "chroma")
     pdf_path = os.path.join(base_dir, file_hash, "doc.pdf")
-    
+
     # Create directory structure
     os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
-    
+
     # Save PDF if not exists
     if not os.path.exists(pdf_path):
         with open(pdf_path, "wb") as f:
             f.write(file_content)
-    
+
     # Process PDF and create vector store if not exists
-    if not os.path.exists(chroma_dir):
+    if not os.path.exists(st.session_state.chroma_dir):
         with st.status("📤 Processing PDF...", expanded=True):
             docs = process_pdf(pdf_path)
             embeddings = load_embeddings()
             Chroma.from_documents(
                 documents=docs,
                 embedding=embeddings,
-                persist_directory=chroma_dir
+                persist_directory=st.session_state.chroma_dir
             )
-    
+
     # Load existing vector store
     embeddings = load_embeddings()
     db = Chroma(
-        persist_directory=chroma_dir,
+        persist_directory=st.session_state.chroma_dir,
         embedding_function=embeddings
     )
+
     retriever = db.as_retriever(search_kwargs={'k': 3})
     
     # Create conversation chain
